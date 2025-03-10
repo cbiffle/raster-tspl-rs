@@ -1,0 +1,11 @@
+[package]
+name = "tspl-filter-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cups-filter-sys = {path = "cups-filter-sys"}
+signal-hook = "0.3.17"
+
+[workspace]
+members = ["cups-filter-sys"]
