@@ -1,0 +1,64 @@
+# A CUPS filter for TSPL printers, in Rust
+
+This is a CUPS filter for generating printer control programs in TSPL, a printer
+control language used by label printers. It was specifically developed for the
+iDPRT SP420, but should support other TSPL printers, though features may be
+missing.
+
+The CUPS "filter" acts somewhat as a printer driver. Combined with the PPD file
+(included), it enables CUPS to generate the printer's special control commands.
+Unlike a conventional driver, a CUPS filter is run without privileges, and
+without direct device access. However, Apple (CUPS's main author) has chosen not
+to implement robust sandboxing on operating systems other than their own, so
+filters are "medium-safe" on Linux.
+
+
+## How to use this
+
+Unfortunately, CUPS filters have to be installed as a privileged user. Build
+this program:
+
+```
+cargo build --release
+```
+
+...and then copy the result into your system's CUPS filter directory. The path
+shown is correct for Linux; other Unix-like systems may differ.
+
+```
+cp target/release/raster-tspl /usr/lib/cups/filter/
+```
+
+You will need to adjust the file's permissions so that CUPS is willing to
+execute it. The easiest way to do this is to `chown` it to `root`. **Do not mark
+it setuid.**
+
+```
+sudo chown root:root /usr/lib/cups/filter/raster-tspl
+```
+
+Now, install the printer using the normal method you use for CUPS, providing
+the vendor-provided PPD file, but _not_ the vendor-provided filter. You should
+now have a working printer.
+
+
+## Why though
+
+I bought a nice little shipping label printer, and while its manufacturer does
+support Linux explicitly (yay!), I was dismayed to discover that they do it by
+distributing a sourceless x86 binary. If you want to run the printer from a
+Raspberry Pi, or if you're suspicious of running random binaries handed to you
+by strangers, then that won't do.
+
+The vendor driver package mentioned something called "TSPL," which turned out to
+be easy to find with a search engine.
+
+I found an [existing filter derived from CUPS's source code][rastertolabel],
+which is a little complex to build, and pulls CUPS's license with it. Using it
+and the vendor driver as reference points, I wrote this driver as a standalone
+program. It's in Rust, which should make it a little more robust against common
+programming errors, but it still uses CUPS's libraries under the hood, so it
+won't be bulletproof.
+
+
+[rastertolabel]: https://github.com/thorrak/rpi-tspl-cups-driver

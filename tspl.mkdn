@@ -1,0 +1,135 @@
+# TSPL printer language notes
+
+This is cribbed and summarized from various sources on the internet, then
+simplified to the subset that's useful for CUPS.
+
+## Commands
+
+### `BITMAP`
+
+- `BITMAP {x},{y},{width_bytes},{height_lines},{mode},{data}`
+
+Draws a bitmap into the printer's framebuffer.
+
+The upper-left coordinate of the drawing area is given by `x` and `y` and is
+measured in dots.
+
+The image is described in terms of `width_bytes` and `height_lines`, with the
+implication that it must be a multiple of 8 dots across.
+
+`mode=0` overwrites the rectangular area of the buffer. `mode=1` bitwise-ORs the
+image into the buffer. `mode=2` bitwise-XORs it.
+
+`data` is a string of exactly `width_bytes * height_lines` bytes, unencoded,
+starting from the top left and continuing in raster order. In each byte, the MSB
+represents the leftmost dot, the LSB the rightmost. 
+
+At least one firmware accepts this command terminated with just a newline, but
+terminating `data` with the normal `CR LF` sequence is probably more general.
+
+
+### `BLINE`
+
+- `BLINE {line_height},{extra_feed}`
+- `BLINE {line_height} mm,{extra_feed} mm`
+
+For labels separated by a black mark, this sets the height (length) of the black
+line to `line_height` (inches if no unit is specified, `mm` if given).
+
+`extra_feed` of non-zero causes the tape to be fed an extra distance after the
+line.
+
+
+### `CLS`
+
+- `CLS`
+
+Clears the printer's buffer. Some printers appear to require this after `SIZE`,
+presumably so they can reallocate memory or whatever.
+
+
+### `DENSITY`
+
+- `DENSITY {d}`
+
+Sets the darkness of the output, on a scale from 0 (least dark) to 15 (most
+dark). The default value for `d` is typically 8.
+
+
+### `DIRECTION`
+
+- `DIRECTION {d}`
+- `DIRECTION {d},{e}`
+
+Sets the print direction of the label, and optionally mirrors horizontally.
+
+`d=0` causes the label to emerge head-first. `d=1` causes it to emerge
+feet-first.
+
+`e=0` or omitted causes the label to print normally. `e=1` mirrors the label
+horizontally.
+
+
+### `GAP`
+
+- `GAP {gap},{offset}`
+- `GAP {gap} mm,{offset} mm`
+
+Sets the gap between labels to `gap` and optionally applies an offset, `offset`,
+adjusting the actual start of the label relative to the point that the printer
+sensed.
+
+
+### `OFFSET`
+
+- `OFFSET {dist}`
+- `OFFSET {dist} mm`
+
+Sets an additional distance to feed a label after printing. The printer reverses
+this distance before printing.
+
+
+### `PRINT`
+
+- `PRINT {set_count}`
+- `PRINT {set_count},{copies_in_set}`
+
+Prints `set_count * copies_in_set` labels using the stored graphics buffer. For
+raster output, this should almost always just be `PRINT 1,1`. The sets/copies
+stuff allows the printer itself to number labels using internal counters.
+
+
+### `REFERENCE`
+
+- `REFERENCE {x},{y}`
+
+Defines the reference point for the label in page coordinates (dots). 
+
+
+### `SIZE`
+
+- `SIZE {x},{y}`
+- `SIZE {x} mm,{y} mm`
+
+Gives the width and length of the label, respectively. If no unit is specified,
+TSPL appears to assume inches. Filters I have inspected only use the `mm` mode.
+Note that the space between the number and the text `mm` is mandatory.
+
+Printers tested support at least one decimal place.
+
+
+### `SPEED`
+
+- `SPEED {in_per_s}`
+
+Sets the print speed, in inches per second. Valid values are given in the
+printer's PPD.
+
+
+## Sources
+
+The subset of commands above are used in the vendor driver for my printer, as
+inspected with basic binary inspection tools.
+
+Another source of relevant TSPL information is [the HT300 TSPL
+manual](https://download.hprt.com/upload/files/HPRT%20HT%20Series%20Programming%20Manual_TSPL_Rev.1.2.zip).
