@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use std::{error::Error, ffi::{c_int, CStr}, fs::File, mem::MaybeUninit, ops::{Deref, DerefMut}, os::fd::{AsRawFd, IntoRawFd}, path::Path, ptr::{null_mut, NonNull}, str::FromStr};
 
 use cups_filter_sys::{cupsFreeOptions, cupsMarkOptions, cupsParseOptions, cupsRasterClose, cupsRasterOpen, cupsRasterReadHeader2, cupsRasterReadPixels, cups_mode_e_CUPS_RASTER_READ, cups_option_t, cups_page_header2_t, cups_raster_t, ppdClose, ppdErrorString, ppdFindMarkedChoice, ppdLastError, ppdMarkDefaults, ppdOpenFd, ppd_choice_t, ppd_file_t};
