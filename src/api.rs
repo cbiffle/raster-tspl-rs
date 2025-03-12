@@ -2,6 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+//! Very basic API wrappers for filter-related stuff in CUPS, to make the memory
+//! management and use of pointers easier to analyze.
+
 use std::{
     error::Error,
     ffi::{CStr, c_int},
