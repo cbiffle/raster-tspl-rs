@@ -4,8 +4,17 @@
 
 mod api;
 
-use std::{error::Error, ffi::{c_int, CString}, os::unix::ffi::OsStrExt, process::exit, sync::{atomic::{AtomicBool, Ordering}, Arc}};
 use std::io::Write;
+use std::{
+    error::Error,
+    ffi::{CString, c_int},
+    os::unix::ffi::OsStrExt,
+    process::exit,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+};
 
 use api::{Options, PpdFile, Raster};
 use cups_filter_sys::cups_page_header2_t;
@@ -54,7 +63,7 @@ fn error_main() -> Result<(), Box<dyn Error>> {
 
     let args = std::env::args_os().collect::<Vec<_>>();
 
-    if !matches!(args.len(),  6 | 7) {
+    if !matches!(args.len(), 6 | 7) {
         return Err("tspl-filter-rs job-id user title copies options [file]".into());
     }
 
@@ -163,12 +172,16 @@ fn start_page(ppd: &mut PpdFile, header: &cups_page_header2_t) -> Result<(), Box
 
             out!("SIZE {width_mm} mm,{height_mm} mm");
 
-            let reference_x = ppd.parse_default_marked_choice(c"AdjustHoriaontal")?
+            // n.b. the typo in this is claimed in one of the open-source
+            // drivers to appear in a vendor PPD, but it does not appear in the
+            // PPDs I've inspected. Nevertheless...
+            let reference_x = ppd
+                .parse_default_marked_choice(c"AdjustHoriaontal")?
                 .unwrap_or(0);
-            let reference_y = ppd.parse_default_marked_choice(c"AdjustVertical")?
+            let reference_y = ppd
+                .parse_default_marked_choice(c"AdjustVertical")?
                 .unwrap_or(0);
-            let rotate = ppd.parse_default_marked_choice(c"Rotate")?
-                .unwrap_or(0);
+            let rotate = ppd.parse_default_marked_choice(c"Rotate")?.unwrap_or(0);
 
             let mut media_tracking = MediaTracking::Gap;
             if let Some(choice) = ppd.find_marked_choice(c"zeMediaTracking") {
@@ -179,22 +192,24 @@ fn start_page(ppd: &mut PpdFile, header: &cups_page_header2_t) -> Result<(), Box
                 }
             }
 
-            let gap_mark_height = ppd.parse_default_marked_choice(c"GapOrMarkHeight")?
+            let gap_mark_height = ppd
+                .parse_default_marked_choice(c"GapOrMarkHeight")?
                 .unwrap_or(3);
-            let gap_mark_offset = ppd.parse_default_marked_choice(c"GapOrMarkOffset")?
+            let gap_mark_offset = ppd
+                .parse_default_marked_choice(c"GapOrMarkOffset")?
                 .unwrap_or(0);
-            let feed_offset = ppd.parse_default_marked_choice(c"FeedOffset")?
-                .unwrap_or(0);
-            let darkness = ppd.parse_default_marked_choice(c"Darkness")?
-                .unwrap_or(8);
-            let speed = ppd.parse_default_marked_choice(c"zePrintRate")?
+            let feed_offset = ppd.parse_default_marked_choice(c"FeedOffset")?.unwrap_or(0);
+            let darkness = ppd.parse_default_marked_choice(c"Darkness")?.unwrap_or(8);
+            let speed = ppd
+                .parse_default_marked_choice(c"zePrintRate")?
                 .unwrap_or(4);
-            let autodotted = ppd.parse_default_marked_choice(c"Autodotted")?
-                .unwrap_or(0);
+            let autodotted = ppd.parse_default_marked_choice(c"Autodotted")?.unwrap_or(0);
 
-            out!("REFERENCE {},{}",
+            out!(
+                "REFERENCE {},{}",
                 dots_per_mm_x as i32 * reference_x,
-                dots_per_mm_y as i32 * reference_y);
+                dots_per_mm_y as i32 * reference_y
+            );
             out!("DIRECTION {rotate},0");
 
             match media_tracking {
@@ -213,22 +228,32 @@ fn start_page(ppd: &mut PpdFile, header: &cups_page_header2_t) -> Result<(), Box
             out!("DENSITY {darkness}");
             out!("SPEED {speed}");
 
-            out!("SETC AUTODOTTED {}", if autodotted != 0 { "ON" } else { "OFF" });
+            out!(
+                "SETC AUTODOTTED {}",
+                if autodotted != 0 { "ON" } else { "OFF" }
+            );
 
             out!("SETC PAUSEKEY ON");
             out!("SETC WATERMARK OFF");
             out!("CLS");
 
-            print!("BITMAP 0,0,{},{},1,",
+            print!(
+                "BITMAP 0,0,{},{},1,",
                 (header.cupsWidth + 7) >> 3,
-                header.cupsHeight);
+                header.cupsHeight
+            );
         }
         x => unimplemented!("model number {x}"),
     }
     Ok(())
 }
 
-fn output_line(ppd: &PpdFile, _header: &cups_page_header2_t, _y: u32, buffer: &[u8]) -> Result<(), Box<dyn Error>> {
+fn output_line(
+    ppd: &PpdFile,
+    _header: &cups_page_header2_t,
+    _y: u32,
+    buffer: &[u8],
+) -> Result<(), Box<dyn Error>> {
     match ppd.raw().model_number {
         BEEPRT => {
             // Convert 8-bit grayscale to 1-bit black and white
