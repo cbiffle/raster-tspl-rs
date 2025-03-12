@@ -12,6 +12,11 @@ without direct device access. However, Apple (CUPS's main author) has chosen not
 to implement robust sandboxing on operating systems other than their own, so
 filters are "medium-safe" on Linux.
 
+**Please note:** Using this with any other printer will, for now, require the
+source code to be modified to be aware of additional PPD "model numbers." If you
+run into this, contact me, I'll happily update the driver when I'm available.
+Filing a bug and attaching the PPD would be fine.
+
 
 ## How to use this
 
