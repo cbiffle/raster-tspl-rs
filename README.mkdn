@@ -15,15 +15,19 @@ filters are "medium-safe" on Linux.
 
 ## How to use this
 
-Unfortunately, CUPS filters have to be installed as a privileged user. Build
-this program:
+You'll need a reasonably recent Rust toolchain (one with 2024 edition support,
+so 1.85 or later).
+
+To build this program:
 
 ```
 cargo build --release
 ```
 
-...and then copy the result into your system's CUPS filter directory. The path
-shown is correct for Linux; other Unix-like systems may differ.
+Installation: unfortunately, CUPS filters have to be installed by a privileged
+user. Copy the result into your system's CUPS filter directory. The path shown
+is correct for Linux; other Unix-like systems may differ. You may need to use
+`sudo` or equivalent.
 
 ```
 cp target/release/raster-tspl /usr/lib/cups/filter/
@@ -31,10 +35,10 @@ cp target/release/raster-tspl /usr/lib/cups/filter/
 
 You will need to adjust the file's permissions so that CUPS is willing to
 execute it. The easiest way to do this is to `chown` it to `root`. **Do not mark
-it setuid.**
-
+it setuid.** Note that this command may require `sudo` or equivalent.
+ 
 ```
-sudo chown root:root /usr/lib/cups/filter/raster-tspl
+chown root:root /usr/lib/cups/filter/raster-tspl
 ```
 
 Now, install the printer using the normal method you use for CUPS, providing
