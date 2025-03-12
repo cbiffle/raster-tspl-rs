@@ -93,7 +93,7 @@ fn error_main() -> Result<(), Box<dyn Error>> {
 
     let mut page = 0;
     loop {
-        let Ok(header) = ras.read_header2() else {
+        let Ok(header) = ras.read_header() else {
             break;
         };
 
@@ -120,7 +120,9 @@ fn error_main() -> Result<(), Box<dyn Error>> {
 
             // Read a line of graphics
             let r = ras.read_pixels(&mut buffer);
-            if r == 0 {
+            if r < buffer.len() {
+                // Abort on end of stream or any short read (which is most
+                // likely end-of-stream in disguise).
                 break;
             }
 
